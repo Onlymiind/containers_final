@@ -1,0 +1,40 @@
+services:
+  app:
+    image: traefik/whoami
+    restart: unless-stopped
+    networks:
+      - network
+  
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    volumes:
+      - db_files:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - network
+
+  proxy:
+    image: nginx:1-alpine
+    restart: unless-stopped
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - network
+
+volumes:
+  db_files:
+
+networks:
+  network:
+    driver: bridge
